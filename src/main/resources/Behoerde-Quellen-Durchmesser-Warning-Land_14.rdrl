@@ -1,0 +1,18 @@
+import java.lang.Number;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.RumeUploadDto;
+import com.av360.eemo.application.dto.rume.KpTeilergebnisDto;
+import com.av360.eemo.application.dto.rume.KpRegelergebnisDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.BetriebsstaetteRumeDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.QuelleRumeDto;
+
+rule "Behoerde-Quellen-Durchmesser-Warning-Land_14"
+    dialect "mvel"
+    agenda-group "KOMPLEXPRUEFUNG_14_BEHOERDE"
+    when
+        $rumeUploadDto : RumeUploadDto( bericht != null, bericht.betriebsstaette != null )
+        $betriebsstaette : BetriebsstaetteRumeDto() from $rumeUploadDto.bericht.betriebsstaette
+        exists QuelleRumeDto( durchmesser != null, (durchmesser >= 70.0 && durchmesser < 75 )) from $betriebsstaette.quellen
+        $teilergebnis : KpTeilergebnisDto()
+    then
+        $teilergebnis.addRegelergebnisWarnung( "Durchmesser liegt nahe an den Maximalwerten", "Behoerde-Quellen-Durchmesser-Warning-Land_14", "Durchmesser muss unter Kontrolle sein" );
+end

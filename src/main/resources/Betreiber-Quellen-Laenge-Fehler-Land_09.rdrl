@@ -1,0 +1,18 @@
+import java.lang.Number;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.RumeUploadDto;
+import com.av360.eemo.application.dto.rume.KpTeilergebnisDto;
+import com.av360.eemo.application.dto.rume.KpRegelergebnisDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.BetriebsstaetteRumeDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.QuelleRumeDto;
+
+rule "Betreiber-Quellen-Laenge-Fehler-Land_09"
+    dialect "mvel"
+    agenda-group "KOMPLEXPRUEFUNG_09_BETREIBER"
+    when
+        $rumeUploadDto : RumeUploadDto( bericht != null, bericht.betriebsstaette != null )
+        $betriebsstaette : BetriebsstaetteRumeDto() from $rumeUploadDto.bericht.betriebsstaette
+        exists QuelleRumeDto( laenge != null, laenge >= 160.0 ) from $betriebsstaette.quellen
+        $teilergebnis : KpTeilergebnisDto()
+    then
+        $teilergebnis.addRegelergebnisFehler( "Laenge ist außerhalb der Grenzen", "Betreiber-Quellen-Laenge-Fehler-Land_09", "Laenge kann nicht genehmigt werden" );
+end

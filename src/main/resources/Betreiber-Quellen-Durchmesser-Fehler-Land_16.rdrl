@@ -1,0 +1,18 @@
+import java.lang.Number;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.RumeUploadDto;
+import com.av360.eemo.application.dto.rume.KpTeilergebnisDto;
+import com.av360.eemo.application.dto.rume.KpRegelergebnisDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.BetriebsstaetteRumeDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.QuelleRumeDto;
+
+rule "Betreiber-Quellen-Durchmesser-Fehler-Land_16"
+    dialect "mvel"
+    agenda-group "KOMPLEXPRUEFUNG_16_BETREIBER"
+    when
+        $rumeUploadDto : RumeUploadDto( bericht != null, bericht.betriebsstaette != null )
+        $betriebsstaette : BetriebsstaetteRumeDto() from $rumeUploadDto.bericht.betriebsstaette
+        exists QuelleRumeDto( durchmesser != null, durchmesser >= 75.0 ) from $betriebsstaette.quellen
+        $teilergebnis : KpTeilergebnisDto()
+    then
+        $teilergebnis.addRegelergebnisFehler( "Durchmesser ist außerhalb der Grenzen", "Betreiber-Quellen-Durchmesser-Fehler-Land_16", "Durchmesser kann nicht genehmigt werden" );
+end

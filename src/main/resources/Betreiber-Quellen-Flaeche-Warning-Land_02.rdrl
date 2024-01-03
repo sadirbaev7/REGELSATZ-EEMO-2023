@@ -1,0 +1,18 @@
+import java.lang.Number;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.RumeUploadDto;
+import com.av360.eemo.application.dto.rume.KpTeilergebnisDto;
+import com.av360.eemo.application.dto.rume.KpRegelergebnisDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.BetriebsstaetteRumeDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.QuelleRumeDto;
+
+rule "Betreiber-Quellen-Flaeche-Warning-Land_02"
+    dialect "mvel"
+    agenda-group "KOMPLEXPRUEFUNG_02_BETREIBER"
+    when
+        $rumeUploadDto : RumeUploadDto( bericht != null, bericht.betriebsstaette != null )
+        $betriebsstaette : BetriebsstaetteRumeDto() from $rumeUploadDto.bericht.betriebsstaette
+        exists QuelleRumeDto( flaeche != null, (flaeche >= 200.0 && flaeche < 250 )) from $betriebsstaette.quellen
+        $teilergebnis : KpTeilergebnisDto()
+    then
+        $teilergebnis.addRegelergebnisWarnung( "Flaeche liegt nahe an den Maximalwerten", "Betreiber-Quellen-Flaeche-Warning-Land_02", "Flaeche muss unter Kontrolle sein" );
+end

@@ -1,0 +1,18 @@
+import java.lang.Number;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.RumeUploadDto;
+import com.av360.eemo.application.dto.rume.KpTeilergebnisDto;
+import com.av360.eemo.application.dto.rume.KpRegelergebnisDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.BetriebsstaetteRumeDto;
+import com.av360.eemo.infrastructure.dto.rume.marshalling.QuelleRumeDto;
+
+rule "Betreiber-Quellen-Laenge-Warning-Land_09"
+    dialect "mvel"
+    agenda-group "KOMPLEXPRUEFUNG_09_BETREIBER"
+    when
+        $rumeUploadDto : RumeUploadDto( bericht != null, bericht.betriebsstaette != null )
+        $betriebsstaette : BetriebsstaetteRumeDto() from $rumeUploadDto.bericht.betriebsstaette
+        exists QuelleRumeDto( laenge != null, (laenge >= 150.0 && laenge < 160 )) from $betriebsstaette.quellen
+        $teilergebnis : KpTeilergebnisDto()
+    then
+        $teilergebnis.addRegelergebnisWarnung( "Laenge liegt nahe an den Maximalwerten", "Betreiber-Quellen-Laenge-Warning-Land_09", "Laenge muss unter Kontrolle sein" );
+end
